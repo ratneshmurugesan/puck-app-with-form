@@ -3,41 +3,27 @@ import { ArrayField, AutoField, FieldLabel, type Config } from "@measured/puck";
 type Props = {
   FormComponent: {
     title: string;
-    items: any[];
+    items: unknown;
   };
+};
+
+const fieldPairStyle = {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gridTemplateRows: "auto auto",
+  gap: 4,
+  justifyContent: "flex-start",
+  alignItems: "flex-start",
+  width: "70vw",
 };
 
 export const config: Config<Props> = {
   components: {
     FormComponent: {
       label: "Form",
-      // fields: {
-      //   title: { type: "text" },
-      //   items: {
-      //     type: "array",
-      //     arrayFields: {
-      //       title: { type: "text", label: "Y" },
-      //       fieldType: {
-      //         type: "select",
-      //         options: [
-      //           // { label: "Left", value: "left" },
-      //           // { label: "Right", value: "right" },
-      //         ],
-      //       },
-      //     },
-      //     defaultItemProps: {
-      //       title: "Element Label",
-      //     },
-      //   },
-      // },
       defaultProps: {
         title: "Form",
-        items: [
-          {
-            fieldType: "text",
-            title: "Element Label",
-          },
-        ],
+        items: [],
       },
       resolveFields: async (data) => {
         console.log({ data });
@@ -54,10 +40,10 @@ export const config: Config<Props> = {
                 type: "select",
                 label: "field Type",
                 options: [
+                  { label: "Text", value: "text" },
                   { label: "Radio", value: "radio" },
                   { label: "Select", value: "select" },
                   { label: "Checkbox", value: "checkbox" },
-                  { label: "Text", value: "text" },
                   { label: "Textarea", value: "textarea" },
                 ],
               },
@@ -77,21 +63,15 @@ export const config: Config<Props> = {
 
         const updatedObj = {
           ...fields,
-          ...data.props.items,
+          ...(data.props.items as Record<string, unknown>),
         };
 
-        // if (data.props.items.find((item) => item.label === "Y")) {
         console.log("Y found", updatedObj);
         return updatedObj;
-        // }
-
-        // return fields;
       },
       render: ({ title, items }) => {
-        // console.log({ title, items });
         return (
           <div
-            className="custom-form"
             style={{
               display: "flex",
               flexDirection: "column",
@@ -103,19 +83,14 @@ export const config: Config<Props> = {
               paddingBottom: 16,
             }}
           >
-            <p>{title as unknown as string}</p>
-            {items?.map((item, i) => {
-              if (item.fieldType === "text") {
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 16,
-                    }}
-                  >
-                    <>
+            <p style={{ fontWeight: "bold", fontSize: 24 }}>
+              {title as unknown as string}
+            </p>
+            {(items as unknown as Array<Record<string, any>>)?.map(
+              (item, i) => {
+                if (item.fieldType === "text") {
+                  return (
+                    <div key={i} style={fieldPairStyle}>
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
@@ -128,20 +103,11 @@ export const config: Config<Props> = {
                         }}
                         style={{ border: "1px solid black", padding: 4 }}
                       />
-                    </>
-                  </div>
-                );
-              } else if (item.fieldType === "textarea") {
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 16,
-                    }}
-                  >
-                    <>
+                    </div>
+                  );
+                } else if (item.fieldType === "textarea") {
+                  return (
+                    <div key={i} style={fieldPairStyle}>
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
@@ -154,23 +120,12 @@ export const config: Config<Props> = {
                         }}
                         style={{ border: "1px solid black", padding: 4 }}
                       />
-                    </>
-                  </div>
-                );
-              } else if (item.fieldType === "radio") {
-                console.log({ radio: item });
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "auto 1fr",
-                      gap: 16,
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <>
+                    </div>
+                  );
+                } else if (item.fieldType === "radio") {
+                  console.log({ radio: item });
+                  return (
+                    <div key={i} style={fieldPairStyle}>
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
@@ -203,22 +158,11 @@ export const config: Config<Props> = {
                             </label>
                           ))}
                       </div>
-                    </>
-                  </div>
-                );
-              } else if (item.fieldType === "select") {
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "auto 1fr",
-                      gap: 16,
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <>
+                    </div>
+                  );
+                } else if (item.fieldType === "select") {
+                  return (
+                    <div key={i} style={fieldPairStyle}>
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
@@ -243,22 +187,11 @@ export const config: Config<Props> = {
                             </option>
                           ))}
                       </select>
-                    </>
-                  </div>
-                );
-              } else if (item.fieldType === "checkbox") {
-                return (
-                  <div
-                    key={i}
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "auto 1fr",
-                      gap: 16,
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <>
+                    </div>
+                  );
+                } else if (item.fieldType === "checkbox") {
+                  return (
+                    <div key={i} style={fieldPairStyle}>
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
@@ -298,12 +231,27 @@ export const config: Config<Props> = {
                             </label>
                           ))}
                       </div>
-                    </>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={i} style={fieldPairStyle}>
+                    <FieldLabel label={item.label}>
+                      <span key={i}>{item.title}</span>
+                    </FieldLabel>
+                    <input
+                      defaultValue={item.value}
+                      name={item.name}
+                      onChange={(e) => {
+                        console.log({ v: e.currentTarget.value });
+                        item.onChange(e.currentTarget.value);
+                      }}
+                      style={{ border: "1px solid black", padding: 4 }}
+                    />
                   </div>
                 );
               }
-              return null;
-            })}
+            )}
           </div>
         );
       },

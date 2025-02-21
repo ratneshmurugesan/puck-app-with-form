@@ -1,11 +1,6 @@
 body {
   margin: 0;
+  font-family: 'Inter', Courier, monospace;
 }
 
-.custom-form {
-  display: "flex";
-  flex-direction: "column";
-  gap: "16px";
-  justify-content: flex-start;
-  align-items: center;
-}
+
