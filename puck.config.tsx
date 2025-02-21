@@ -1,4 +1,5 @@
 import { ArrayField, AutoField, FieldLabel, type Config } from "@measured/puck";
+import { v4 as uuidv4 } from "uuid";
 
 type Props = {
   FormComponent: {
@@ -11,10 +12,11 @@ const fieldPairStyle = {
   display: "grid",
   gridTemplateColumns: "1fr",
   gridTemplateRows: "auto auto",
-  gap: 4,
+  gap: 16,
   justifyContent: "flex-start",
   alignItems: "flex-start",
   width: "70vw",
+  fontSize: 24,
 };
 
 export const config: Config<Props> = {
@@ -26,7 +28,6 @@ export const config: Config<Props> = {
         items: [],
       },
       resolveFields: async (data) => {
-        console.log({ data });
         const fields = {
           title: {
             type: "text" as const,
@@ -39,6 +40,7 @@ export const config: Config<Props> = {
               fieldType: {
                 type: "select",
                 label: "field Type",
+                id: `${uuidv4()}`,
                 options: [
                   { label: "Text", value: "text" },
                   { label: "Radio", value: "radio" },
@@ -47,16 +49,24 @@ export const config: Config<Props> = {
                   { label: "Textarea", value: "textarea" },
                 ],
               },
+              ...((data.props.items as Record<string, unknown>[]).find(
+                (item) =>
+                  item.fieldType !== "text" && item.fieldType !== "textarea"
+              )
+                ? {
+                    fieldOptionCount: {
+                      type: "number",
+                      label: "No.of options",
+                      min: 1,
+                    },
+                  }
+                : {}),
             },
-            getItemSummary: (item) => item.title || "Item",
+            getItemSummary: (item) => `${item.title}` || "Item",
             defaultItemProps: {
-              title: "Element Label",
-              items: [
-                {
-                  fieldType: "text",
-                  title: "Element Label",
-                },
-              ],
+              id: `${uuidv4()}`,
+              title: "Text Label",
+              fieldType: "text",
             },
           } as ArrayField<typeof fields.items>,
         };
@@ -65,8 +75,6 @@ export const config: Config<Props> = {
           ...fields,
           ...(data.props.items as Record<string, unknown>),
         };
-
-        console.log("Y found", updatedObj);
         return updatedObj;
       },
       render: ({ title, items }) => {
@@ -94,14 +102,12 @@ export const config: Config<Props> = {
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
-                      <input
-                        defaultValue={item.value}
-                        name={item.name}
+                      <AutoField
+                        field={{ type: "text" }}
                         onChange={(e) => {
-                          console.log({ v: e.currentTarget.value });
                           item.onChange(e.currentTarget.value);
                         }}
-                        style={{ border: "1px solid black", padding: 4 }}
+                        value={item.value}
                       />
                     </div>
                   );
@@ -111,56 +117,66 @@ export const config: Config<Props> = {
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
-                      <textarea
-                        defaultValue={item.value}
-                        name={item.name}
+                      <AutoField
+                        field={{ type: "textarea" }}
+                        value={item.value}
                         onChange={(e) => {
-                          console.log({ v: e.currentTarget.value });
                           item.onChange(e.currentTarget.value);
                         }}
-                        style={{ border: "1px solid black", padding: 4 }}
                       />
                     </div>
                   );
                 } else if (item.fieldType === "radio") {
-                  console.log({ radio: item });
+                  if (!item.fieldOptionCount)
+                    return (
+                      <div key={i} style={fieldPairStyle}>
+                        <p>Add no. of options</p>
+                      </div>
+                    );
                   return (
                     <div key={i} style={fieldPairStyle}>
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
-                      <div
-                        style={{
-                          width: "100%",
-                          display: "flex",
-                          gap: 4,
-                        }}
-                      >
-                        {Array.from({ length: 3 })
-                          .map((_, i) => ({
-                            id: `radio-${i}`,
-                            value: i,
-                            label: `Radio option ${i}`,
-                          }))
-                          .map((option, j) => (
-                            <label key={j}>
-                              <input
-                                type="radio"
-                                name={item.name}
-                                value={option.value}
-                                checked={item.value === option.value}
-                                onChange={(e) => {
-                                  console.log({ v: e.currentTarget.value });
-                                  item.onChange(e.currentTarget.value);
-                                }}
-                              />
-                              {option.label}
-                            </label>
-                          ))}
+                      <div style={fieldPairStyle}>
+                        {item.fieldOptionCount > 0 ? (
+                          Array.from({ length: item.fieldOptionCount })
+                            .map((_, i) => ({
+                              id: `radio-${i}`,
+                              value: i,
+                              label: `Radio option ${i}`,
+                            }))
+                            .map((option) => (
+                              <label key={option.id}>
+                                <input
+                                  type="radio"
+                                  name={item.name}
+                                  value={option.value}
+                                  checked={item.value === option.value}
+                                  onChange={(e) => {
+                                    item.onChange(e.currentTarget.value);
+                                  }}
+                                  style={{
+                                    width: 16,
+                                    height: 16,
+                                  }}
+                                />
+                                {option.label}
+                              </label>
+                            ))
+                        ) : (
+                          <p>Add no. of options</p>
+                        )}
                       </div>
                     </div>
                   );
                 } else if (item.fieldType === "select") {
+                  if (!item.fieldOptionCount)
+                    return (
+                      <div key={i} style={fieldPairStyle}>
+                        <p>Add no. of options</p>
+                      </div>
+                    );
                   return (
                     <div key={i} style={fieldPairStyle}>
                       <FieldLabel label={item.label}>
@@ -170,66 +186,79 @@ export const config: Config<Props> = {
                         name={item.name}
                         value={item.value}
                         onChange={(e) => {
-                          console.log({ v: e.currentTarget.value });
                           item.onChange(e.currentTarget.value);
                         }}
                         style={{ border: "1px solid black", padding: 4 }}
                       >
-                        {Array.from({ length: 3 })
-                          .map((_, i) => ({
-                            id: `select-${i}`,
-                            value: i,
-                            label: `Select option ${i}`,
-                          }))
-                          .map((option, j) => (
-                            <option key={j} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
+                        {item.fieldOptionCount > 0 ? (
+                          Array.from({ length: item.fieldOptionCount })
+                            .map((_, i) => ({
+                              id: `select-${i}`,
+                              value: i,
+                              label: `Select option ${i}`,
+                            }))
+                            .map((option) => (
+                              <option key={option.id} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))
+                        ) : (
+                          <p>Add no. of options</p>
+                        )}
                       </select>
                     </div>
                   );
                 } else if (item.fieldType === "checkbox") {
+                  if (!item.fieldOptionCount)
+                    return (
+                      <div key={i} style={fieldPairStyle}>
+                        <p>Add no. of options</p>
+                      </div>
+                    );
                   return (
                     <div key={i} style={fieldPairStyle}>
                       <FieldLabel label={item.label}>
                         <span key={i}>{item.title}</span>
                       </FieldLabel>
-                      <div
-                        style={{
-                          width: "100%",
-                          display: "flex",
-                          gap: 4,
-                        }}
-                      >
-                        {Array.from({ length: 2 })
-                          .map((_, i) => ({
-                            id: `checkbox-${i}`,
-                            value: i,
-                            label: `Checkbox option ${i}`,
-                          }))
-                          .map((option, j) => (
-                            <label key={j}>
-                              <input
-                                type="checkbox"
-                                name={item.name}
-                                value={option.value}
-                                checked={!!item.value?.includes(option.value)}
-                                onChange={(e) => {
-                                  const values = Array.from(
-                                    (
-                                      e.currentTarget as HTMLInputElement
-                                    ).closest("form")!.elements
-                                  )
-                                    .map((el) => (el as HTMLInputElement).value)
-                                    .filter(Boolean);
+                      <div style={fieldPairStyle}>
+                        {item.fieldOptionCount > 0 ? (
+                          Array.from({ length: item.fieldOptionCount })
+                            .map((_, i) => ({
+                              id: `checkbox-${i}`,
+                              value: i,
+                              label: `Checkbox option ${i}`,
+                            }))
+                            .map((option) => (
+                              <label key={option.id}>
+                                <input
+                                  type="checkbox"
+                                  name={item.name}
+                                  value={option.value}
+                                  checked={!!item.value?.includes(option.value)}
+                                  onChange={(e) => {
+                                    const values = Array.from(
+                                      (
+                                        e.currentTarget as HTMLInputElement
+                                      ).closest("form")!.elements
+                                    )
+                                      .map(
+                                        (el) => (el as HTMLInputElement).value
+                                      )
+                                      .filter(Boolean);
 
-                                  item.onChange(values);
-                                }}
-                              />
-                              {option.label}
-                            </label>
-                          ))}
+                                    item.onChange(values);
+                                  }}
+                                  style={{
+                                    width: 16,
+                                    height: 16,
+                                  }}
+                                />
+                                {option.label}
+                              </label>
+                            ))
+                        ) : (
+                          <p>Add no. of options</p>
+                        )}
                       </div>
                     </div>
                   );
@@ -243,7 +272,6 @@ export const config: Config<Props> = {
                       defaultValue={item.value}
                       name={item.name}
                       onChange={(e) => {
-                        console.log({ v: e.currentTarget.value });
                         item.onChange(e.currentTarget.value);
                       }}
                       style={{ border: "1px solid black", padding: 4 }}
