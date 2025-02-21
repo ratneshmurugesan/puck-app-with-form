@@ -1,81 +1,92 @@
-import { AutoField, DropZone, FieldLabel, type Config } from "@measured/puck";
+import { ArrayField, AutoField, FieldLabel, type Config } from "@measured/puck";
 
 type Props = {
-  // HeadingBlock: { title: string };
-  // FormBlock: {
-  //   label :string;
-  //   title: string;
-  //   // fields: unknown;
-  // }
   FormComponent: {
     title: string;
-    // textAlign: string;
-    // resolveFields: any;
     items: any[];
   };
 };
 
 export const config: Config<Props> = {
   components: {
-    // HeadingBlock: {
-    //   fields: {
-    //     title: { type: "text" },
-    //   },
-    //   defaultProps: {
-    //     title: "Heading",
-    //   },
-    //   render: ({ title }) => (
-    //     <div style={{ padding: 64 }}>
-    //       <h1>{title}</h1>
-    //     </div>
-    //   ),
-    // },
     FormComponent: {
       label: "Form",
-      fields: {
-        title: { type: "text" },
-        items: {
-          type: "array",
-          arrayFields: {
-            title: { type: "text", label: "Y" },
-            textAlign: {
-              type: "select",
-              options: [
-                { label: "Left", value: "left" },
-                { label: "Right", value: "right" },
-              ],
-            },
-          },
-          defaultItemProps: {
-            title: "Element Label",
-          },
-        },
-      },
+      // fields: {
+      //   title: { type: "text" },
+      //   items: {
+      //     type: "array",
+      //     arrayFields: {
+      //       title: { type: "text", label: "Y" },
+      //       fieldType: {
+      //         type: "select",
+      //         options: [
+      //           // { label: "Left", value: "left" },
+      //           // { label: "Right", value: "right" },
+      //         ],
+      //       },
+      //     },
+      //     defaultItemProps: {
+      //       title: "Element Label",
+      //     },
+      //   },
+      // },
       defaultProps: {
         title: "Form",
-        items: [],
+        items: [
+          {
+            fieldType: "text",
+            title: "Element Label",
+          },
+        ],
       },
-      // resolveFields: (data) => {
-      //   console.log({ data });
-      //   // const fields = {
-      //   //   title: {
-      //   //     type: "radio",
-      //   //     options: [
-      //   //       { label: "Water", value: "water" },
-      //   //       { label: "Orange juice", value: "orange-juice" },
-      //   //     ],
-      //   //   },
-      //   // };
-      //   // if (data.props.drink === "water") {
-      //   //   return {
-      //   //     ...fields,
-      //   //     waterType: {
-      //   //       // ... Define field
-      //   //     },
-      //   //   };
-      //   // }
-      //   return null;
-      // },
+      resolveFields: async (data) => {
+        console.log({ data });
+        const fields = {
+          title: {
+            type: "text" as const,
+            render: AutoField,
+          },
+          items: {
+            type: "array" as const,
+            arrayFields: {
+              title: { type: "text", label: "label" },
+              fieldType: {
+                type: "select",
+                label: "field Type",
+                options: [
+                  { label: "Radio", value: "radio" },
+                  { label: "Select", value: "select" },
+                  { label: "Checkbox", value: "checkbox" },
+                  { label: "Text", value: "text" },
+                  { label: "Textarea", value: "textarea" },
+                ],
+              },
+            },
+            getItemSummary: (item) => item.title || "Item",
+            defaultItemProps: {
+              title: "Element Label",
+              items: [
+                {
+                  fieldType: "text",
+                  title: "Element Label",
+                },
+              ],
+            },
+          } as ArrayField<typeof fields.items>,
+        };
+
+        const updatedObj = {
+          ...fields,
+          ...data.props.items,
+        };
+
+        // if (data.props.items.find((item) => item.label === "Y")) {
+        console.log("Y found", updatedObj);
+        return updatedObj;
+        // }
+
+        // return fields;
+      },
       render: ({ title, items }) => {
         // console.log({ title, items });
         return (
@@ -94,127 +105,209 @@ export const config: Config<Props> = {
           >
             <p>{title as unknown as string}</p>
             {items?.map((item, i) => {
-              // console.log({ item });
-              return (
-                <div
-                  key={i}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 16,
-                  }}
-                >
-                  <>
-                    {/* <FieldLabel label={item.label}>
-                    <span key={i}>{item.title}</span>
-                  </FieldLabel>
-                  <input name={item.name} /> */}
-                    <FieldLabel label={item.label}>
-                      <span key={i}>{item.title}</span>
-                    </FieldLabel>
-                    {/* <AutoField
-                    field={{ type: "text" }}
-                    onChange={(value) => {
-                      console.log({ value });
-                      item.onChange(value);
+              if (item.fieldType === "text") {
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 16,
                     }}
-                    value={item.value}
-                  /> */}
-                    <input
-                      defaultValue={item.value}
-                      name={item.name}
-                      onChange={(e) => {
-                        console.log({ v: e.currentTarget.value });
-                        item.onChange(e.currentTarget.value);
-                      }}
-                      style={{ border: "1px solid black", padding: 4 }}
-                    />
-                  </>
-                </div>
-              );
+                  >
+                    <>
+                      <FieldLabel label={item.label}>
+                        <span key={i}>{item.title}</span>
+                      </FieldLabel>
+                      <input
+                        defaultValue={item.value}
+                        name={item.name}
+                        onChange={(e) => {
+                          console.log({ v: e.currentTarget.value });
+                          item.onChange(e.currentTarget.value);
+                        }}
+                        style={{ border: "1px solid black", padding: 4 }}
+                      />
+                    </>
+                  </div>
+                );
+              } else if (item.fieldType === "textarea") {
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 16,
+                    }}
+                  >
+                    <>
+                      <FieldLabel label={item.label}>
+                        <span key={i}>{item.title}</span>
+                      </FieldLabel>
+                      <textarea
+                        defaultValue={item.value}
+                        name={item.name}
+                        onChange={(e) => {
+                          console.log({ v: e.currentTarget.value });
+                          item.onChange(e.currentTarget.value);
+                        }}
+                        style={{ border: "1px solid black", padding: 4 }}
+                      />
+                    </>
+                  </div>
+                );
+              } else if (item.fieldType === "radio") {
+                console.log({ radio: item });
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr",
+                      gap: 16,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <>
+                      <FieldLabel label={item.label}>
+                        <span key={i}>{item.title}</span>
+                      </FieldLabel>
+                      <div
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          gap: 4,
+                        }}
+                      >
+                        {Array.from({ length: 3 })
+                          .map((_, i) => ({
+                            id: `radio-${i}`,
+                            value: i,
+                            label: `Radio option ${i}`,
+                          }))
+                          .map((option, j) => (
+                            <label key={j}>
+                              <input
+                                type="radio"
+                                name={item.name}
+                                value={option.value}
+                                checked={item.value === option.value}
+                                onChange={(e) => {
+                                  console.log({ v: e.currentTarget.value });
+                                  item.onChange(e.currentTarget.value);
+                                }}
+                              />
+                              {option.label}
+                            </label>
+                          ))}
+                      </div>
+                    </>
+                  </div>
+                );
+              } else if (item.fieldType === "select") {
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr",
+                      gap: 16,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <>
+                      <FieldLabel label={item.label}>
+                        <span key={i}>{item.title}</span>
+                      </FieldLabel>
+                      <select
+                        name={item.name}
+                        value={item.value}
+                        onChange={(e) => {
+                          console.log({ v: e.currentTarget.value });
+                          item.onChange(e.currentTarget.value);
+                        }}
+                        style={{ border: "1px solid black", padding: 4 }}
+                      >
+                        {Array.from({ length: 3 })
+                          .map((_, i) => ({
+                            id: `select-${i}`,
+                            value: i,
+                            label: `Select option ${i}`,
+                          }))
+                          .map((option, j) => (
+                            <option key={j} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                      </select>
+                    </>
+                  </div>
+                );
+              } else if (item.fieldType === "checkbox") {
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "auto 1fr",
+                      gap: 16,
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <>
+                      <FieldLabel label={item.label}>
+                        <span key={i}>{item.title}</span>
+                      </FieldLabel>
+                      <div
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          gap: 4,
+                        }}
+                      >
+                        {Array.from({ length: 2 })
+                          .map((_, i) => ({
+                            id: `checkbox-${i}`,
+                            value: i,
+                            label: `Checkbox option ${i}`,
+                          }))
+                          .map((option, j) => (
+                            <label key={j}>
+                              <input
+                                type="checkbox"
+                                name={item.name}
+                                value={option.value}
+                                checked={!!item.value?.includes(option.value)}
+                                onChange={(e) => {
+                                  const values = Array.from(
+                                    (
+                                      e.currentTarget as HTMLInputElement
+                                    ).closest("form")!.elements
+                                  )
+                                    .map((el) => (el as HTMLInputElement).value)
+                                    .filter(Boolean);
+
+                                  item.onChange(values);
+                                }}
+                              />
+                              {option.label}
+                            </label>
+                          ))}
+                      </div>
+                    </>
+                  </div>
+                );
+              }
+              return null;
             })}
           </div>
         );
       },
     },
-    // FormBlock: {
-    //   label: "Form Block!!",
-    //   fields: {
-    //     title: {
-    //       type: "custom",
-    //       render: ({ name, onChange, value }) => (
-    //         <>
-    //           <input
-    //             defaultValue={`${value}-!!`}
-    //             name={name}
-    //             onChange={(e) => onChange(e.currentTarget.value)}
-    //           />
-    //           <button>Add</button>
-    //         </>
-    //       ),
-    //     },
-    //     textAlign: {
-    //       type: "select",
-    //       options: [
-    //         { label: "Left", value: "left" },
-    //         { label: "Right", value: "right" },
-    //       ],
-    //     },
-    //     // textAlign: {
-    //     //   type: "select",
-    //     //   options: [
-    //     //     { label: "Left", value: "left" },
-    //     //     { label: "Right", value: "right" },
-    //     //   ],
-    //     // },
-    //     data: {
-    //       type: "external",
-    //       fetchList: async () => {
-    //         // ... fetch data from a third party API, or other async source
-
-    //         return [
-    //           { title: "Hello, world", description: "Lorem ipsum 1" },
-    //           { title: "Goodbye, world", description: "Lorem ipsum 2" },
-    //         ];
-    //       },
-    //     },
-    //   },
-    //   defaultProps: {
-    //     title: "Hello, world",
-    //     data: { title: "1" },
-    //     textAlign: "",
-    //   },
-    //   // render: () => (
-    //   //   <div
-    //   //     style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}
-    //   //   >
-    //   //     <DropZone zone="left-column" />
-    //   //     <DropZone zone="right-column" />
-    //   //   </div>
-    //   // ),
-    //   // render: ({ title, data, textAlign }) => (
-    //   //   <>
-    //   //     <h1>{title}</h1>
-    //   //     <p>{data?.title || "No data selected"}</p>
-    //   //   </>
-    //   // ),
-    //   //   resolveData: async ({ props }) => {
-    //   //     return {
-    //   //       props: {
-    //   //         resolvedTitle: props.title,
-    //   //       },
-    //   //     };
-    //   //   },
-    //   //   render: ({ resolvedTitle }) => {
-    //   //     return <h1>{resolvedTitle}</h1>;
-    //   //   },
-    //   // },
-    //   render: () => (
-    //     <div style={{ padding: 32 }}>
-    //       <p>Form</p>
-    //     </div>
-    //   ),
-    // },
   },
 };
 
